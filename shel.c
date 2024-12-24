@@ -13,31 +13,28 @@ int main(void)
 
     while (1)
     {
-        printf("#cisfun$ ");
+        // Only print the prompt if stdin is a terminal (interactive mode)
+        if (isatty(fileno(stdin))) {
+            printf("#cisfun$ ");
+        }
 
         nread = getline(&line, &len, stdin);
 
-        /* Handle EOF (Ctrl+D) */
+        // Handle EOF (Ctrl+D)
         if (nread == -1)
         {
             free(line);
             exit(0);
         }
 
-        /* Remove newline character */
+        // Remove newline character
         line[strcspn(line, "\n")] = 0;
-
-        /* Check if the input is a single word (no spaces) */
-        if (strchr(line, ' ') != NULL) {
-            fprintf(stderr, "./shell: Command must be a single word.\n");
-            continue;
-        }
 
         pid = fork();
 
         if (pid == 0)
         {
-            /* Execute the command */
+            // Execute the command
             if (execlp(line, line, NULL) == -1) {
                 perror("./shell");
                 exit(1);
