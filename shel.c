@@ -13,28 +13,24 @@ int main(void)
 
     while (1)
     {
-        // Only print the prompt if stdin is a terminal (interactive mode)
         if (isatty(fileno(stdin))) {
             printf("#cisfun$ ");
         }
 
         nread = getline(&line, &len, stdin);
 
-        // Handle EOF (Ctrl+D)
         if (nread == -1)
         {
             free(line);
             exit(0);
         }
 
-        // Remove newline character
         line[strcspn(line, "\n")] = 0;
 
         pid = fork();
 
         if (pid == 0)
         {
-            // Execute the command
             if (execlp(line, line, NULL) == -1) {
                 perror("./shell");
                 exit(1);
