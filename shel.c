@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 
 int main(void)
@@ -10,44 +11,49 @@ int main(void)
     size_t len = 0;
     ssize_t nread;
     pid_t pid;
+    int status;
 
     while (1)
     {
-        if (isatty(fileno(stdin))) {
-            printf("#cisfun$ ");
-        }
-
-        nread = getline(&line, &len, stdin);
-
+        printf("#cisfun$ ");
+	
+	nread = getline(&line, &len, stdin);
         if (nread == -1)
-        {
-            free(line);
-            exit(0);
+	{
+            printf("\n");
+            break;
         }
-
-        line[strcspn(line, "\n")] = 0;
+	
+	if (line[nread - 1] == '\n')
+            line[nread - 1] = '\0';
 
         pid = fork();
 
-        if (pid == 0)
-        {
-            if (execlp(line, line, NULL) == -1) {
-                perror("./shell");
-                exit(1);
-            }
-        }
-        else if (pid < 0)
+        if (pid == -1)
         {
             perror("fork");
-            exit(1);
+            free(line);
+            exit(EXIT_FAILURE);
         }
-        else
-        {
-            wait(NULL);
+        if (pid == 0) 
+	{
+            char *args[2];
+            args[0] = line;
+            args[1] = NULL;
+            
+	    if (execve(line, args, NULL) == -1)
+            {
+                perror("execve");
+                free(line);
+                exit(EXIT_FAILURE);
+            }
         }
+        else 
+	{
+            wait(&status);
+	}
     }
 
     free(line);
     return 0;
 }
-
